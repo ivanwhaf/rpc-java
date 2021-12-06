@@ -9,6 +9,7 @@ import java.net.InetSocketAddress;
 public class Main {
 
     public static void main(String[] args) {
+        // server
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -22,11 +23,11 @@ public class Main {
         long start = System.currentTimeMillis();
         for (int i = 0; i < 1000; i++) {
             ICalculator calculator = (ICalculator) RpcClient.getRemoteProxy(ICalculator.class, new InetSocketAddress("127.0.0.1", 8888));
-            //System.out.println(calculator.add(1,2));
             try {
-                calculator.add(i, 1);
-            } catch (Exception ignored) {
+                System.out.println(calculator.add(i, 1));
+            } catch (Exception e) {
                 System.out.println("Connect failed!");
+                e.printStackTrace();
             }
         }
         long end = System.currentTimeMillis();
