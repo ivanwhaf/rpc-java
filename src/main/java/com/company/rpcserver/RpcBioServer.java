@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class RpcServer {
+public class RpcBioServer {
 
     private static final int port = 8888;
     private static final Map<String, Class> registry = new HashMap<>();
@@ -54,7 +54,6 @@ public class RpcServer {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            System.out.println(socket.getPort());
             pool.execute(new Handler(socket));
         }
     }
@@ -75,21 +74,22 @@ public class RpcServer {
                 String s = (String) input.readObject();
                 System.out.println(s);
                 JSONObject json = JSONObject.parseObject(s);
+                //System.out.println("[Server]Receive json: "+json);
 
                 String serviceName = json.getString("serviceName");
-                System.out.println("Client service name: " + serviceName);
+                System.out.println("[Server]service: " + serviceName);
                 String methodName = json.getString("methodName");
-                System.out.println("Client method: " + methodName);
+                System.out.println("[Server]method: " + methodName);
 
                 List<Class> lst = JSON.parseArray(json.getString("parameterTypes"), Class.class);
                 Class<?>[] parameterTypes = new Class<?>[lst.size()];
                 for (int i = 0; i < lst.size(); i++) parameterTypes[i] = lst.get(i);
-                System.out.println("Client parameterTypes: " + Arrays.toString(parameterTypes));
+                System.out.println("[Server]parameterTypes: " + Arrays.toString(parameterTypes));
 
                 List<Object> lst2 = JSON.parseArray(json.getString("args"), Object.class);
                 Object[] args = new Object[lst2.size()];
                 for (int i = 0; i < lst2.size(); i++) args[i] = lst2.get(i);
-                System.out.println("Client args: " + Arrays.toString(args));
+                System.out.println("[Server]args: " + Arrays.toString(args));
 
                 Class serviceClass = registry.get(serviceName);
 

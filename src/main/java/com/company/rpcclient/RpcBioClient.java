@@ -1,7 +1,6 @@
 package com.company.rpcclient;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
 import java.io.ObjectInputStream;
@@ -11,10 +10,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.List;
 
 
-public class RpcClient {
+public class RpcBioClient {
 
     public static Object getRemoteProxy(final Class<?> serviceInterface, final InetSocketAddress addr) {
         return Proxy.newProxyInstance(serviceInterface.getClassLoader(), new Class<?>[]{serviceInterface}, new InvocationHandler() {
@@ -24,30 +22,31 @@ public class RpcClient {
                 Socket socket = new Socket();
                 socket.connect(addr);
 
-                JSONObject json=new JSONObject();
+                JSONObject json = new JSONObject();
                 ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
                 //output.writeUTF(serviceInterface.getName());
                 //output.writeUTF(method.getName());
-                json.put("serviceName",serviceInterface.getName());
-                json.put("methodName",method.getName());
 
-                String typesJson = JSON.toJSONString(method.getParameterTypes());
-                //List<Class> lst=JSON.parseArray(typesJson,Class.class);
-                //Class<?>[] types=new Class<?>[lst.size()];
-                //for(int i=0;i<lst.size();i++) types[i]= lst.get(i);
+                json.put("serviceName", serviceInterface.getName());
+                json.put("methodName", method.getName());
 
-                String argsJson=JSON.toJSONString(args);
+                String parameterTypesJson = JSON.toJSONString(method.getParameterTypes());
+                String argsJson = JSON.toJSONString(args);
 
-                json.put("parameterTypes",typesJson);
-                json.put("args",argsJson);
+                json.put("parameterTypes", parameterTypesJson);
+                json.put("args", argsJson);
 
                 //output.writeObject(types);
                 //output.writeObject(args);
                 output.writeObject(json.toJSONString());
-                System.out.println(json);
+                System.out.println("[Client]Request json: "+json);
 
                 ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
-                return input.readObject();
+
+                Object res=input.readObject();
+                System.out.println("[Client]Result json: " + res);
+                System.out.println("------------------------------------------------");
+                return res;
             }
         });
     }
