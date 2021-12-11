@@ -36,8 +36,8 @@ public class RpcNioServer {
         // register class
         register(ICalculator.class.getName(), Calculator.class);
 
-        ServerSocketChannel server = null;
-        Selector selector = null;
+        ServerSocketChannel server;
+        Selector selector;
         try {
             server = ServerSocketChannel.open();
             server.bind(new InetSocketAddress("localhost", port));
@@ -47,17 +47,29 @@ public class RpcNioServer {
 
         } catch (IOException e) {
             e.printStackTrace();
+            return;
         }
+
+        Set<SelectionKey> keys;
+        Iterator<SelectionKey> it;
 
         while (true) {
             try {
-                selector.select();
-                Set<SelectionKey> keys = selector.selectedKeys();
-                Iterator<SelectionKey> it = keys.iterator();
+                selector.select();//blocking
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            keys = selector.selectedKeys();
+            it = keys.iterator();
 
-                while (it.hasNext()) {
-                    SelectionKey key = it.next();
-                    it.remove();
+            SelectionKey key=null;
+
+            while (it.hasNext()) {
+
+                key = it.next();
+                it.remove();
+
+                try {
                     if (!key.isValid()) continue;
 
                     if (key.isAcceptable()) {
@@ -74,11 +86,18 @@ public class RpcNioServer {
                         //read buffer
                         ByteBuffer buffer = ByteBuffer.allocate(1024);
                         StringBuilder s = new StringBuilder();
+
                         int length = sc.read(buffer);
+                        if (length == -1) {
+                            key.cancel();
+                            sc.close();
+                            continue;
+                        }
+
                         while (length > 0) {
                             s.append(new String(buffer.array(), 0, length));
                             buffer.clear();
-                            length=sc.read(buffer);
+                            length = sc.read(buffer);
                         }
 
                         //json data
@@ -102,24 +121,26 @@ public class RpcNioServer {
                         System.out.println("[Server]args: " + Arrays.toString(args));
 
                         //run method
-                        Class serviceClass = registry.get(serviceName);
+                        Class<?> serviceClass = registry.get(serviceName);
                         Method method = serviceClass.getMethod(methodName, parameterTypes);
                         Object result = method.invoke(serviceClass.newInstance(), args);
 
                         //send result back to client
                         json = new JSONObject();
                         json.put("method", methodName);
-                        json.put("args",Arrays.toString(args));
+                        json.put("args", Arrays.toString(args));
                         json.put("result", JSON.toJSONString(result));
                         ByteBuffer sendBuffer = ByteBuffer.wrap(json.toString().getBytes());
                         sc.write(sendBuffer);
+
                     }
+                } catch (IOException | NoSuchMethodException | InvocationTargetException | IllegalAccessException | InstantiationException e) {
+                    e.printStackTrace();
+                    key.cancel();
+
                 }
 
-            } catch (IOException | InvocationTargetException | NoSuchMethodException | IllegalAccessException | InstantiationException e) {
-                e.printStackTrace();
             }
-
         }
     }
 }

@@ -28,7 +28,7 @@ public class Main {
                 calculator.add(i,1);
                 //calculator.add(i,2);
             } catch (Exception e) {
-                System.out.println("Connect failed!");
+                System.out.println("Call remote server failed!");
                 e.printStackTrace();
             }
         }

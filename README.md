@@ -12,3 +12,6 @@ BIO + Thread pool + Fastjson
 ## beta v0.3
 NIO(No thread pool) + Fastjson
 1000req/1000ms
+
+## beta v0.3.1
+Fix bug: when gc, SocketChannel.read() return -1

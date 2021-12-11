@@ -38,6 +38,7 @@ public class RpcNioClient {
 
                 //request method
                 output.write(json.toString().getBytes());
+
                 System.out.println("[Client]Request json: " + json);
 
                 //read result
